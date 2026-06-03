@@ -282,11 +282,8 @@ function Hero() {
   const goto = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: '#000' }}>
-      <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0 }} />
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1,
-        background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.55) 100%)' }} />
-
+    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: 'transparent' }}>
+            
       <div style={{ position: 'absolute', inset: 0, zIndex: 2,
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', textAlign: 'center', padding: '0 20px' }}>
@@ -362,47 +359,6 @@ function HBtn({ children, onClick, filled }) {
 /* ─────────────────────────────────────────
    BRAND VIDEO
 ───────────────────────────────────────── */
-function BrandVideo() {
-  const secRef = useRef(null);
-
-  useEffect(() => {
-    if (!window.gsap || !window.ScrollTrigger || !secRef.current) return;
-    const gsap = window.gsap;
-    gsap.registerPlugin(window.ScrollTrigger);
-    const ctx = gsap.context(() => {
-      gsap.fromTo('.bv-video-text',
-        { opacity: 0, y: 50 },
-        { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out',
-          scrollTrigger: { trigger: secRef.current, start: 'top 75%' } });
-    }, secRef);
-    return () => ctx.revert();
-  }, []);
-
-  return (
-    <section id="services" ref={secRef}
-      style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
-      <video src="/hero-video.mp4" autoPlay muted loop playsInline
-        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 200,
-        background: 'linear-gradient(to bottom,#000,transparent)' }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 200,
-        background: 'linear-gradient(to top,#000,transparent)' }} />
-      <div className="bv-video-text" style={{
-        position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', opacity: 0,
-      }}>
-        <p style={{ fontFamily: 'Montserrat', fontWeight: 200, fontSize: '0.78rem',
-          letterSpacing: '0.42em', color: 'rgba(201,168,76,0.7)',
-          textTransform: 'uppercase', marginBottom: 18 }}>WATCH THE VISION</p>
-        <div style={{ width: 56, height: 1, background: 'var(--gold)', marginBottom: 20 }} />
-        <p style={{ fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic',
-          fontWeight: 300, fontSize: 'clamp(1.5rem,4vw,2.6rem)', color: 'var(--text)' }}>
-          Precision in motion.
-        </p>
-      </div>
-    </section>
-  );
-}
 
 /* ─────────────────────────────────────────
    ABOUT
@@ -433,7 +389,7 @@ function About() {
 
   return (
     <section id="about" ref={secRef}
-      style={{ background: 'var(--surface)', padding: 'clamp(60px,10vw,120px) clamp(20px,6vw,60px)' }}>
+      style={{ background: 'rgba(0,0,0,0.45)', padding: 'clamp(60px,10vw,120px) clamp(20px,6vw,60px)' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 'clamp(40px,6vw,80px)',
         alignItems: 'center' }}>
@@ -542,7 +498,7 @@ function LiveDemos() {
   }, []);
 
   return (
-    <section id="demos" style={{ background: '#000', padding: 'clamp(60px,10vw,120px) clamp(20px,5vw,50px)' }}>
+    <section id="demos" style={{ background: 'rgba(0,0,0,0.5)', padding: 'clamp(60px,10vw,120px) clamp(20px,5vw,50px)' }}>
       <div style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div ref={hdRef} style={{ textAlign:'center', marginBottom:56, opacity:0 }}>
           <p style={{ fontFamily:'Montserrat', fontWeight:200, fontSize:'0.74rem',
@@ -1603,15 +1559,42 @@ function DemoCaption({ children }) {
 export default function App() {
   return (
     <>
-      <Navbar />
-      <Hero />
-      <BrandVideo />
-      <About />
-      <LiveDemos />
-      <Packages />
-      <BrandMark />
-      <Contact />
-      <Footer />
+      {/* Fixed video background — entire site */}
+      <div style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 0,
+        overflow: 'hidden',
+      }}>
+        <video
+          src="/hero-video.mp4"
+          autoPlay muted loop playsInline
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+          }}
+        />
+        {/* Dark overlay so text stays readable */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.72)',
+        }} />
+      </div>
+
+      {/* All site content floats above video */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <Navbar />
+        <Hero />
+        <About />
+        <LiveDemos />
+        <Packages />
+        <BrandMark />
+        <Contact />
+        <Footer />
+      </div>
     </>
   );
 }
