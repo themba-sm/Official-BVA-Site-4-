@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Black Vale Automation — AI Systems. Automation. Precision." />
+    <meta property="og:title" content="Black Vale Automation" />
+    <meta property="og:description" content="AI-powered workflows that eliminate inefficiency, capture every lead, and scale your operation." />
+    <title>Black Vale Automation</title>
+    <link rel="icon" href="%PUBLIC_URL%/logo.png" />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet" />
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- GSAP + ScrollTrigger -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <style>
+      :root {
+        --gold: #C9A84C;
+        --gold-light: #F0D080;
+        --gold-dark: #8B6914;
+        --crimson: #8B1A1A;
+        --black: #000000;
+        --surface: #0a0a0a;
+        --text: #E8DCC8;
+      }
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--black);
+        color: var(--text);
+        font-family: 'Cormorant Garamond', serif;
+        overflow-x: hidden;
+      }
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-track { background: #000; }
+      ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+      @keyframes scrollDot {
+        0% { transform: translateY(0); opacity: 1; }
+        100% { transform: translateY(14px); opacity: 0; }
+      }
+      @keyframes rotateLogo {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes logoPulse {
+        0%, 100% { box-shadow: 0 0 30px rgba(201,168,76,0.2), 0 0 60px rgba(201,168,76,0.1); }
+        50% { box-shadow: 0 0 60px rgba(201,168,76,0.5), 0 0 120px rgba(201,168,76,0.2); }
+      }
+      @keyframes greenPulse {
+        0%, 100% { opacity: 1; box-shadow: 0 0 6px #22c55e; }
+        50% { opacity: 0.4; }
+      }
+      @keyframes typingDot {
+        0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+        30% { transform: translateY(-5px); opacity: 1; }
+      }
+      @keyframes tabFade {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes dashFlow {
+        from { stroke-dashoffset: 40; }
+        to { stroke-dashoffset: 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run Black Vale Automation.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
