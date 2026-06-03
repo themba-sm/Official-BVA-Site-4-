@@ -18,22 +18,11 @@ function goldText(extra = {}) {
 
 function CrownSVG({ size = 40, style = {} }) {
   return (
-    <svg width={size} height={size * 0.72} viewBox="0 0 100 72" fill="none"
-      xmlns="http://www.w3.org/2000/svg" style={style}>
-      <defs>
-        <linearGradient id="cg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8B6914" />
-          <stop offset="40%" stopColor="#C9A84C" />
-          <stop offset="70%" stopColor="#F0D080" />
-          <stop offset="100%" stopColor="#C9A84C" />
-        </linearGradient>
-      </defs>
-      <polygon points="10,62 10,22 32,42 50,6 68,42 90,22 90,62" fill="url(#cg)" />
-      <rect x="8" y="60" width="84" height="9" rx="4" fill="url(#cg)" />
-      <circle cx="10" cy="22" r="5.5" fill="url(#cg)" />
-      <circle cx="50" cy="6" r="5.5" fill="url(#cg)" />
-      <circle cx="90" cy="22" r="5.5" fill="url(#cg)" />
-    </svg>
+    <img
+      src="/logo.png"
+      alt="Black Vale"
+      style={{ width: size, height: size, objectFit: 'contain', ...style }}
+    />
   );
 }
 
