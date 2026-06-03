@@ -145,8 +145,6 @@ function NavLink({ children, onClick }) {
    HERO
 ───────────────────────────────────────── */
 function Hero() {
-  const canvasRef = useRef(null);
-  const rafRef = useRef(null);
   const crownRef = useRef(null);
   const h1Ref = useRef(null);
   const subRef = useRef(null);
@@ -155,178 +153,63 @@ function Hero() {
   const btnsRef = useRef(null);
 
   useEffect(() => {
-    /* ── Three.js ── */
-    if (!canvasRef.current || !window.THREE) return;
-    const THREE = window.THREE;
-
-    const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current, alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 5;
-
-    // Wave plane
-    const geo = new THREE.PlaneGeometry(14, 14, 80, 80);
-    const mat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: `
-        uniform float uTime;
-        varying float vElev;
-        void main(){
-          vec4 mp = modelMatrix * vec4(position,1.0);
-          float e = sin(mp.x*1.6+uTime)*0.14
-                  + sin(mp.y*1.4+uTime*0.8)*0.14
-                  + sin((mp.x+mp.y)*1.0+uTime*0.55)*0.09;
-          mp.z += e; vElev = e;
-          gl_Position = projectionMatrix * viewMatrix * mp;
-        }
-      `,
-      fragmentShader: `
-        varying float vElev;
-        void main(){
-          float t = clamp((vElev+0.37)/0.74, 0.0, 1.0);
-          vec3 dark = vec3(0.04,0.03,0.01);
-          vec3 gold = vec3(0.788,0.659,0.298);
-          gl_FragColor = vec4(mix(dark,gold,t), 0.65);
-        }
-      `,
-      transparent: true,
-      side: THREE.DoubleSide,
+    if (!window.gsap) return;
+    const ctx = window.gsap.context(() => {
+      window.gsap.fromTo(crownRef.current, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1, delay: 0.3 });
+      window.gsap.fromTo(h1Ref.current, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1.1, delay: 0.5 });
+      window.gsap.fromTo(subRef.current, { opacity: 0 }, { opacity: 1, duration: 1, delay: 0.9 });
+      window.gsap.fromTo(divRef.current, { scaleX: 0 }, { scaleX: 1, duration: 0.8, delay: 1.0, transformOrigin: 'left' });
+      window.gsap.fromTo(tagRef.current, { opacity: 0 }, { opacity: 1, duration: 1, delay: 1.2 });
+      window.gsap.fromTo(btnsRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, delay: 1.4 });
     });
-    const plane = new THREE.Mesh(geo, mat);
-    plane.rotation.x = -Math.PI * 0.28;
-    plane.position.y = -1.2;
-    scene.add(plane);
-
-    // Particles
-    const pCount = 320;
-    const pPos = new Float32Array(pCount * 3);
-    for (let i = 0; i < pCount; i++) {
-      pPos[i * 3]     = (Math.random() - 0.5) * 18;
-      pPos[i * 3 + 1] = (Math.random() - 0.5) * 18;
-      pPos[i * 3 + 2] = (Math.random() - 0.5) * 8;
-    }
-    const pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    const points = new THREE.Points(pGeo,
-      new THREE.PointsMaterial({ color: 0xC9A84C, size: 0.045, transparent: true, opacity: 0.7 }));
-    scene.add(points);
-
-    // Tori
-    const tMat = new THREE.MeshBasicMaterial({ color: 0xC9A84C, wireframe: true, transparent: true, opacity: 0.1 });
-    const t1 = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.06, 8, 64), tMat);
-    t1.rotation.x = Math.PI * 0.4;
-    scene.add(t1);
-    const tMat2 = tMat.clone(); tMat2.opacity = 0.06;
-    const t2 = new THREE.Mesh(new THREE.TorusGeometry(3.8, 0.04, 6, 64), tMat2);
-    t2.rotation.x = -Math.PI * 0.3; t2.rotation.y = Math.PI * 0.2;
-    scene.add(t2);
-
-    let tX = 0, tY = 0, cX = 0, cY = 0;
-    const onMouse = (e) => {
-      tX = (e.clientX / window.innerWidth - 0.5) * 0.45;
-      tY = -(e.clientY / window.innerHeight - 0.5) * 0.3;
-    };
-    window.addEventListener('mousemove', onMouse);
-
-    const onResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener('resize', onResize);
-
-    let t = 0;
-    const animate = () => {
-      rafRef.current = requestAnimationFrame(animate);
-      t += 0.008;
-      mat.uniforms.uTime.value = t;
-      points.rotation.y += 0.0005;
-      t1.rotation.z += 0.002;
-      t2.rotation.z -= 0.001; t2.rotation.y += 0.0008;
-      cX += (tX - cX) * 0.05; cY += (tY - cY) * 0.05;
-      camera.position.x = cX; camera.position.y = cY;
-      camera.lookAt(0, 0, 0);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    /* ── GSAP hero entrance ── */
-    if (window.gsap) {
-      const gsap = window.gsap;
-      const tl = gsap.timeline({ delay: 0.2 });
-      if (crownRef.current)
-        tl.fromTo(crownRef.current, { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
-      if (h1Ref.current)
-        tl.fromTo(h1Ref.current, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out' }, '-=0.5');
-      if (subRef.current)
-        tl.fromTo(subRef.current, { opacity: 0 }, { opacity: 1, duration: 0.7 }, '-=0.3');
-      if (divRef.current)
-        tl.fromTo(divRef.current, { scaleX: 0 }, { scaleX: 1, duration: 1, ease: 'power2.inOut' }, '-=0.3');
-      if (tagRef.current)
-        tl.fromTo(tagRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.5');
-      if (btnsRef.current)
-        tl.fromTo(btnsRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.4');
-    }
-
-    return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener('mousemove', onMouse);
-      window.removeEventListener('resize', onResize);
-      renderer.dispose();
-    };
+    return () => ctx.revert();
   }, []);
 
-  const goto = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-
   return (
-    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: 'transparent' }}>
-            
-      <div style={{ position: 'absolute', inset: 0, zIndex: 2,
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', textAlign: 'center', padding: '0 20px' }}>
-
-        <div ref={crownRef} style={{ opacity: 0, marginBottom: 18 }}><CrownSVG size={64} /></div>
-
-        <h1 ref={h1Ref} style={{
-          opacity: 0, fontFamily: 'Cinzel,serif', fontWeight: 900,
-          fontSize: 'clamp(3rem,8.5vw,7.5rem)', lineHeight: 1,
-          letterSpacing: '0.04em', marginBottom: 8, ...goldText(),
-        }}>BLACK VALE</h1>
-
-        <p ref={subRef} style={{
-          opacity: 0, fontFamily: 'Cinzel,serif', fontWeight: 400,
-          fontSize: 'clamp(0.75rem,1.8vw,1.05rem)',
-          color: 'var(--crimson)', letterSpacing: '0.55em', marginBottom: 28,
-        }}>· AUTOMATION ·</p>
-
-        <div ref={divRef} style={{
-          width: 220, height: 1,
-          background: 'linear-gradient(90deg,transparent,var(--gold),transparent)',
-          marginBottom: 28, transformOrigin: 'center',
-        }} />
-
-        <p ref={tagRef} style={{
-          opacity: 0, fontFamily: 'Cormorant Garamond,serif', fontStyle: 'italic',
-          fontWeight: 300, fontSize: 'clamp(1rem,2.4vw,1.45rem)',
-          color: 'rgba(201,168,76,0.8)', marginBottom: 44,
-        }}>AI Systems. Automation. Precision.</p>
-
-        <div ref={btnsRef} style={{ opacity: 0, display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>
-          <HBtn filled onClick={() => goto('packages')}>VIEW PACKAGES</HBtn>
-          <HBtn onClick={() => goto('contact')}>CONTACT VALE</HBtn>
+    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 24px' }}>
+        <div ref={crownRef} style={{ opacity: 0, marginBottom: 18 }}>
+          <CrownSVG size={64} />
+        </div>
+        <h1 ref={h1Ref} style={{ fontFamily: 'Cinzel', fontWeight: 700,
+          fontSize: 'clamp(3rem,12vw,7rem)', lineHeight: 1.05,
+          background: 'linear-gradient(135deg, #C9A84C 0%, #f0d080 50%, #C9A84C 100%)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          margin: '0 0 6px', letterSpacing: '0.04em', opacity: 0 }}>
+          BLACK<br />VALE
+        </h1>
+        <p ref={subRef} style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.65rem,2.5vw,0.85rem)',
+          letterSpacing: '0.38em', color: 'var(--crimson)', margin: '0 0 22px', opacity: 0 }}>
+          AUTOMATION
+        </p>
+        <div ref={divRef} style={{ width: 60, height: 1, background: 'var(--gold)', margin: '0 auto 24px', opacity: 0.6, scaleX: 0 }} />
+        <p ref={tagRef} style={{ fontFamily: 'Cormorant', fontStyle: 'italic',
+          fontSize: 'clamp(1rem,3.5vw,1.35rem)', color: 'rgba(255,255,255,0.82)',
+          letterSpacing: '0.04em', marginBottom: 36, opacity: 0 }}>
+          AI Systems. Automation. Precision.
+        </p>
+        <div ref={btnsRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', opacity: 0 }}>
+          <a href="#packages" style={{ display: 'inline-block', padding: '14px 38px',
+            background: 'var(--gold)', color: '#000',
+            fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.78rem',
+            letterSpacing: '0.18em', textDecoration: 'none', textTransform: 'uppercase',
+            minWidth: 240, textAlign: 'center' }}>
+            VIEW PACKAGES
+          </a>
+          <a href="#contact" style={{ display: 'inline-block', padding: '13px 38px',
+            border: '1px solid var(--gold)', color: 'var(--gold)',
+            fontFamily: 'Montserrat', fontWeight: 600, fontSize: '0.78rem',
+            letterSpacing: '0.18em', textDecoration: 'none', textTransform: 'uppercase',
+            minWidth: 240, textAlign: 'center' }}>
+            CONTACT VALE
+          </a>
         </div>
       </div>
-
       {/* Scroll indicator */}
-      <div style={{ position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
-        zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 28, height: 44, border: '2px solid rgba(201,168,76,0.45)',
-          borderRadius: 14, display: 'flex', justifyContent: 'center', paddingTop: 8 }}>
-          <div style={{ width: 4, height: 8, background: 'var(--gold)', borderRadius: 2,
-            animation: 'scrollDot 1.6s ease-in-out infinite' }} />
+      <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', zIndex: 2 }}>
+        <div style={{ width: 24, height: 38, border: '2px solid rgba(201,168,76,0.5)',
+          borderRadius: 12, margin: '0 auto 8px', display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
+          <div style={{ width: 3, height: 8, background: 'var(--gold)', borderRadius: 2 }} />
         </div>
         <span style={{ fontFamily: 'Montserrat', fontSize: '0.58rem',
           color: 'rgba(201,168,76,0.45)', letterSpacing: '0.22em' }}>SCROLL</span>
@@ -334,6 +217,7 @@ function Hero() {
     </section>
   );
 }
+
 
 function HBtn({ children, onClick, filled }) {
   const [h, setH] = useState(false);
