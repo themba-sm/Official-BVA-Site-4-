@@ -145,49 +145,160 @@ function NavLink({ children, onClick }) {
    HERO
 ───────────────────────────────────────── */
 function Hero() {
+  const overlayRef = useRef(null);
   const crownRef = useRef(null);
-  const h1Ref = useRef(null);
-  const subRef = useRef(null);
-  const divRef = useRef(null);
+  const blackRef = useRef(null);
+  const valeRef = useRef(null);
+  const autoRef = useRef(null);
+  const lineRef = useRef(null);
+  const diamondRef = useRef(null);
   const tagRef = useRef(null);
   const btnsRef = useRef(null);
+  const flashRef = useRef(null);
 
   useEffect(() => {
     if (!window.gsap) return;
     const ctx = window.gsap.context(() => {
-      window.gsap.fromTo(crownRef.current, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1, delay: 0.3 });
-      window.gsap.fromTo(h1Ref.current, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 1.1, delay: 0.5 });
-      window.gsap.fromTo(subRef.current, { opacity: 0 }, { opacity: 1, duration: 1, delay: 0.9 });
-      window.gsap.fromTo(divRef.current, { scaleX: 0 }, { scaleX: 1, duration: 0.8, delay: 1.0, transformOrigin: 'left' });
-      window.gsap.fromTo(tagRef.current, { opacity: 0 }, { opacity: 1, duration: 1, delay: 1.2 });
-      window.gsap.fromTo(btnsRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.9, delay: 1.4 });
+      const tl = window.gsap.timeline({ defaults: { ease: 'power4.out' } });
+
+      // Start everything hidden
+      window.gsap.set([crownRef.current, blackRef.current, valeRef.current,
+        autoRef.current, lineRef.current, diamondRef.current, tagRef.current,
+        btnsRef.current], { opacity: 0 });
+      window.gsap.set(overlayRef.current, { opacity: 1 });
+
+      // 1. Flash
+      tl.fromTo(flashRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.08, ease: 'none' }, 0)
+        .to(flashRef.current, { opacity: 0, duration: 0.25 }, 0.08);
+
+      // 2. Crown drops + impact
+      tl.fromTo(crownRef.current,
+        { opacity: 0, y: -120, scale: 2.5, filter: 'blur(12px)' },
+        { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.55, ease: 'power4.out' }, 0.1);
+
+      // 3. BLACK slams in
+      tl.fromTo(blackRef.current,
+        { opacity: 0, scaleX: 1.4, scaleY: 0.5, filter: 'blur(16px)' },
+        { opacity: 1, scaleX: 1, scaleY: 1, filter: 'blur(0px)', duration: 0.4, ease: 'power4.out' }, 0.45);
+
+      // 4. VALE zooms in
+      tl.fromTo(valeRef.current,
+        { opacity: 0, scale: 0.3, filter: 'blur(20px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'back.out(1.4)' }, 0.65);
+
+      // 5. automation slides up in crimson
+      tl.fromTo(autoRef.current,
+        { opacity: 0, y: 40, filter: 'blur(8px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.4, ease: 'power3.out' }, 0.85);
+
+      // 6. Line draws
+      tl.fromTo(lineRef.current,
+        { scaleX: 0, opacity: 0 },
+        { scaleX: 1, opacity: 1, duration: 0.5, ease: 'power2.out', transformOrigin: 'center' }, 1.05);
+
+      // 7. Diamond
+      tl.fromTo(diamondRef.current,
+        { opacity: 0, scale: 0, rotation: 45 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 0.35, ease: 'back.out(2)' }, 1.3);
+
+      // 8. Tagline
+      tl.fromTo(tagRef.current,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.45 }, 1.45);
+
+      // 9. Fade out black overlay — reveal video background
+      tl.to(overlayRef.current, { opacity: 0, duration: 0.7, ease: 'power2.inOut' }, 1.7);
+
+      // 10. Buttons appear
+      tl.fromTo(btnsRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5 }, 2.1);
     });
     return () => ctx.revert();
   }, []);
 
   return (
-    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', padding: '0 24px' }}>
-        <div ref={crownRef} style={{ opacity: 0, marginBottom: 18 }}>
-          <CrownSVG size={64} />
+    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden',
+      background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+      {/* Black overlay — fades out after intro */}
+      <div ref={overlayRef} style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 3, pointerEvents: 'none' }} />
+
+      {/* Flash white on crown impact */}
+      <div ref={flashRef} style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.08)',
+        zIndex: 4, pointerEvents: 'none', opacity: 0 }} />
+
+      {/* Hero content */}
+      <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '0 24px' }}>
+
+        {/* Crown */}
+        <div ref={crownRef} style={{ marginBottom: 10, opacity: 0 }}>
+          <CrownSVG size={80} />
         </div>
-        <h1 ref={h1Ref} style={{ fontFamily: 'Cinzel', fontWeight: 700,
-          fontSize: 'clamp(3rem,12vw,7rem)', lineHeight: 1.05,
-          background: 'linear-gradient(135deg, #C9A84C 0%, #f0d080 50%, #C9A84C 100%)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          margin: '0 0 6px', letterSpacing: '0.04em', opacity: 0 }}>
-          BLACK<br />VALE
-        </h1>
-        <p ref={subRef} style={{ fontFamily: 'Cinzel', fontSize: 'clamp(0.65rem,2.5vw,0.85rem)',
-          letterSpacing: '0.38em', color: 'var(--crimson)', margin: '0 0 22px', opacity: 0 }}>
-          AUTOMATION
-        </p>
-        <div ref={divRef} style={{ width: 60, height: 1, background: 'var(--gold)', margin: '0 auto 24px', opacity: 0.6, scaleX: 0 }} />
-        <p ref={tagRef} style={{ fontFamily: 'Cormorant', fontStyle: 'italic',
-          fontSize: 'clamp(1rem,3.5vw,1.35rem)', color: 'rgba(255,255,255,0.82)',
-          letterSpacing: '0.04em', marginBottom: 36, opacity: 0 }}>
+
+        {/* BLACK */}
+        <div ref={blackRef} style={{ opacity: 0 }}>
+          <span style={{
+            fontFamily: 'Cinzel', fontWeight: 900,
+            fontSize: 'clamp(4rem,16vw,9rem)', lineHeight: 0.9,
+            color: '#1a1a1a',
+            textShadow: '0 2px 40px rgba(0,0,0,0.9), 2px 2px 0 #333, -1px -1px 0 #111',
+            display: 'block', letterSpacing: '0.06em',
+            WebkitTextStroke: '1px rgba(201,168,76,0.3)',
+          }}>BLACK</span>
+        </div>
+
+        {/* VALE */}
+        <div ref={valeRef} style={{ opacity: 0 }}>
+          <span style={{
+            fontFamily: 'Cinzel', fontWeight: 900,
+            fontSize: 'clamp(4rem,16vw,9rem)', lineHeight: 0.9,
+            color: '#1a1a1a',
+            textShadow: '0 2px 40px rgba(0,0,0,0.9), 2px 2px 0 #333, -1px -1px 0 #111',
+            display: 'block', letterSpacing: '0.06em', marginBottom: 8,
+            WebkitTextStroke: '1px rgba(201,168,76,0.3)',
+          }}>VALE</span>
+        </div>
+
+        {/* automation */}
+        <div ref={autoRef} style={{ opacity: 0, marginBottom: 18 }}>
+          <span style={{
+            fontFamily: 'Cinzel', fontWeight: 700,
+            fontSize: 'clamp(1.6rem,6vw,3.2rem)',
+            color: 'var(--crimson)',
+            letterSpacing: '0.08em',
+            textShadow: '0 0 30px rgba(139,0,0,0.6)',
+            display: 'block',
+          }}>automation</span>
+        </div>
+
+        {/* Divider line + diamond */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
+          <div ref={lineRef} style={{
+            height: 1, width: 'clamp(60px,18vw,120px)',
+            background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
+            opacity: 0,
+          }} />
+          <span ref={diamondRef} style={{ color: 'var(--gold)', fontSize: '1rem', opacity: 0 }}>◆</span>
+          <div style={{
+            height: 1, width: 'clamp(60px,18vw,120px)',
+            background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
+          }} />
+        </div>
+
+        {/* Tagline */}
+        <p ref={tagRef} style={{
+          fontFamily: 'Cormorant', fontStyle: 'italic',
+          fontSize: 'clamp(0.95rem,3vw,1.25rem)',
+          color: 'rgba(255,255,255,0.85)', letterSpacing: '0.06em',
+          marginBottom: 38, opacity: 0,
+        }}>
           AI Systems. Automation. Precision.
         </p>
+
+        {/* Buttons */}
         <div ref={btnsRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', opacity: 0 }}>
           <a href="#packages" style={{ display: 'inline-block', padding: '14px 38px',
             background: 'var(--gold)', color: '#000',
@@ -205,8 +316,10 @@ function Hero() {
           </a>
         </div>
       </div>
+
       {/* Scroll indicator */}
-      <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', textAlign: 'center', zIndex: 2 }}>
+      <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+        textAlign: 'center', zIndex: 5 }}>
         <div style={{ width: 24, height: 38, border: '2px solid rgba(201,168,76,0.5)',
           borderRadius: 12, margin: '0 auto 8px', display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
           <div style={{ width: 3, height: 8, background: 'var(--gold)', borderRadius: 2 }} />
@@ -219,26 +332,7 @@ function Hero() {
 }
 
 
-function HBtn({ children, onClick, filled }) {
-  const [h, setH] = useState(false);
-  return (
-    <button onClick={onClick}
-      onMouseEnter={() => setH(true)} onMouseLeave={() => setH(false)}
-      style={{
-        fontFamily: 'Montserrat,sans-serif', fontWeight: 400, fontSize: '0.74rem',
-        letterSpacing: '0.22em', textTransform: 'uppercase', cursor: 'pointer',
-        padding: '14px 38px',
-        border: '1px solid var(--gold)',
-        background: filled
-          ? h ? 'transparent' : 'var(--gold)'
-          : h ? 'rgba(201,168,76,0.08)' : 'transparent',
-        color: filled
-          ? h ? 'var(--gold)' : '#000'
-          : 'var(--gold)',
-        transition: 'all .3s',
-      }}>{children}</button>
-  );
-}
+
 
 /* ─────────────────────────────────────────
    BRAND VIDEO
