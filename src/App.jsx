@@ -161,13 +161,17 @@ function Hero() {
     const THREE = window.THREE;
     if (!THREE || !canvasRef.current) return;
     const canvas = canvasRef.current;
-    const W = canvas.offsetWidth || 180;
-    const H = canvas.offsetHeight || 180;
+    const container = canvas.parentElement;
+    const size = container ? container.offsetWidth || 180 : 180;
+    canvas.width = size;
+    canvas.height = size;
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(W, H);
+    renderer.setSize(size, size);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.aspect = 1;
+    camera.updateProjectionMatrix();
     camera.position.set(0, 0, 3.8);
 
     const ambient = new THREE.AmbientLight(0xfff5cc, 0.4);
