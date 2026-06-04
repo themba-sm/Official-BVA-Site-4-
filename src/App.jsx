@@ -146,201 +146,280 @@ function NavLink({ children, onClick }) {
 ───────────────────────────────────────── */
 function Hero() {
   const overlayRef = useRef(null);
-  const crownRef = useRef(null);
-  const blackRef = useRef(null);
-  const valeRef = useRef(null);
+  const canvasRef = useRef(null);
+  const globeRef = useRef(null);
+  const headlineRef = useRef(null);
   const autoRef = useRef(null);
-  const lineRef = useRef(null);
-  const diamondRef = useRef(null);
+  const dividerRef = useRef(null);
   const tagRef = useRef(null);
   const btnsRef = useRef(null);
   const flashRef = useRef(null);
+  const scrollRef = useRef(null);
 
+  /* Three.js 3D Globe */
+  useEffect(() => {
+    const THREE = window.THREE;
+    if (!THREE || !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    const W = canvas.offsetWidth || 180;
+    const H = canvas.offsetHeight || 180;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(W, H);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.8);
+
+    const ambient = new THREE.AmbientLight(0xfff5cc, 0.4);
+    scene.add(ambient);
+    const key = new THREE.DirectionalLight(0xffd700, 4.0);
+    key.position.set(2, 3, 3);
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xc9a84c, 1.5);
+    fill.position.set(-3, 1, 2);
+    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffffff, 1.0);
+    rim.position.set(0, -2, -3);
+    scene.add(rim);
+    const glow = new THREE.PointLight(0xc9a84c, 3.0, 8);
+    glow.position.set(0, 0, 2.5);
+    scene.add(glow);
+
+    const geo = new THREE.SphereGeometry(1, 96, 96);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x111111, metalness: 0.97, roughness: 0.06,
+    });
+    const globe = new THREE.Mesh(geo, mat);
+    scene.add(globe);
+
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xc9a84c, metalness: 1.0, roughness: 0.04 });
+    const rings = [];
+    [-0.45, 0, 0.45].forEach(y => {
+      const r = Math.sqrt(1 - y * y);
+      const rGeo = new THREE.TorusGeometry(r, 0.009, 16, 100);
+      const ring = new THREE.Mesh(rGeo, ringMat);
+      ring.position.y = y;
+      ring.rotation.x = Math.PI / 2;
+      scene.add(ring); rings.push(ring);
+    });
+    [0, Math.PI / 3, (2 * Math.PI) / 3].forEach(angle => {
+      const lGeo = new THREE.TorusGeometry(1, 0.007, 16, 100);
+      const lMesh = new THREE.Mesh(lGeo, ringMat);
+      lMesh.rotation.y = angle;
+      scene.add(lMesh); rings.push(lMesh);
+    });
+
+    const pCount = 200;
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 1.2 + Math.random() * 0.5;
+      pPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
+      pPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+      pPos[i*3+2] = r * Math.cos(phi);
+    }
+    const pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ color: 0xc9a84c, size: 0.03, transparent: true, opacity: 0.8, sizeAttenuation: true });
+    const particles = new THREE.Points(pGeo, pMat);
+    scene.add(particles);
+
+    const tc = document.createElement('canvas');
+    tc.width = 512; tc.height = 512;
+    const c2 = tc.getContext('2d');
+    const grd = c2.createLinearGradient(0,0,512,512);
+    grd.addColorStop(0,'#8B6914'); grd.addColorStop(0.35,'#C9A84C');
+    grd.addColorStop(0.6,'#F5E07A'); grd.addColorStop(1,'#C9A84C');
+    c2.fillStyle = grd;
+    c2.font = 'bold 210px Georgia, serif';
+    c2.textAlign = 'center'; c2.textBaseline = 'middle';
+    c2.fillText('BV', 256, 256);
+    const spriteTex = new THREE.CanvasTexture(tc);
+    const sMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.85,0.85),
+      new THREE.MeshBasicMaterial({ map: spriteTex, transparent: true, depthWrite: false })
+    );
+    sMesh.position.z = 1.02;
+    scene.add(sMesh);
+
+    let frameId; let t = 0;
+    function animate() {
+      frameId = requestAnimationFrame(animate);
+      t += 0.008;
+      globe.rotation.y = t * 0.18;
+      globe.rotation.x = Math.sin(t * 0.12) * 0.05;
+      rings.forEach((r, i) => { r.rotation.z = t * (0.04 + i * 0.015); });
+      const floatY = Math.sin(t * 0.7) * 0.06;
+      globe.position.y = floatY;
+      sMesh.rotation.y = globe.rotation.y;
+      sMesh.position.y = floatY;
+      particles.rotation.y = t * 0.035;
+      particles.rotation.x = t * 0.018;
+      glow.intensity = 2.5 + Math.sin(t * 1.8) * 0.8;
+      renderer.render(scene, camera);
+    }
+    animate();
+    return () => { cancelAnimationFrame(frameId); renderer.dispose(); };
+  }, []);
+
+  /* GSAP Intro */
   useEffect(() => {
     if (!window.gsap) return;
     const ctx = window.gsap.context(() => {
       const tl = window.gsap.timeline({ defaults: { ease: 'power4.out' } });
-
-      // Start everything hidden
-      window.gsap.set([crownRef.current, blackRef.current, valeRef.current,
-        autoRef.current, lineRef.current, diamondRef.current, tagRef.current,
-        btnsRef.current], { opacity: 0 });
+      window.gsap.set([globeRef.current, headlineRef.current, autoRef.current,
+        dividerRef.current, tagRef.current, btnsRef.current, scrollRef.current], { opacity: 0 });
       window.gsap.set(overlayRef.current, { opacity: 1 });
 
-      // 1. Flash
-      tl.fromTo(flashRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.08, ease: 'none' }, 0)
-        .to(flashRef.current, { opacity: 0, duration: 0.25 }, 0.08);
-
-      // 2. Crown drops + impact
-      tl.fromTo(crownRef.current,
-        { opacity: 0, y: -120, scale: 2.5, filter: 'blur(12px)' },
-        { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', duration: 0.55, ease: 'power4.out' }, 0.1);
-
-      // 3. BLACK slams in
-      tl.fromTo(blackRef.current,
-        { opacity: 0, scaleX: 1.4, scaleY: 0.5, filter: 'blur(16px)' },
-        { opacity: 1, scaleX: 1, scaleY: 1, filter: 'blur(0px)', duration: 0.4, ease: 'power4.out' }, 0.45);
-
-      // 4. VALE zooms in
-      tl.fromTo(valeRef.current,
-        { opacity: 0, scale: 0.3, filter: 'blur(20px)' },
-        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.4, ease: 'back.out(1.4)' }, 0.65);
-
-      // 5. automation slides up in crimson
+      tl.fromTo(flashRef.current, { opacity: 0 }, { opacity: 1, duration: 0.08, ease: 'none' }, 0)
+        .to(flashRef.current, { opacity: 0, duration: 0.3 }, 0.08);
+      tl.fromTo(globeRef.current,
+        { opacity: 0, scale: 0.35, filter: 'blur(22px)' },
+        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.0, ease: 'back.out(1.3)' }, 0.1);
+      tl.fromTo(headlineRef.current,
+        { opacity: 0, y: 28, filter: 'blur(10px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.65 }, 0.8);
       tl.fromTo(autoRef.current,
-        { opacity: 0, y: 40, filter: 'blur(8px)' },
-        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.4, ease: 'power3.out' }, 0.85);
-
-      // 6. Line draws
-      tl.fromTo(lineRef.current,
-        { scaleX: 0, opacity: 0 },
-        { scaleX: 1, opacity: 1, duration: 0.5, ease: 'power2.out', transformOrigin: 'center' }, 1.05);
-
-      // 7. Diamond
-      tl.fromTo(diamondRef.current,
-        { opacity: 0, scale: 0, rotation: 45 },
-        { opacity: 1, scale: 1, rotation: 0, duration: 0.35, ease: 'back.out(2)' }, 1.3);
-
-      // 8. Tagline
-      tl.fromTo(tagRef.current,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.45 }, 1.45);
-
-      // 9. Fade out black overlay — reveal video background
-      tl.to(overlayRef.current, { opacity: 0, duration: 0.7, ease: 'power2.inOut' }, 1.7);
-
-      // 10. Buttons appear
-      tl.fromTo(btnsRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5 }, 2.1);
+        { opacity: 0, y: 18, filter: 'blur(8px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5 }, 1.15);
+      tl.fromTo(dividerRef.current,
+        { opacity: 0, scaleX: 0 },
+        { opacity: 1, scaleX: 1, duration: 0.5, transformOrigin: 'center' }, 1.4);
+      tl.fromTo(tagRef.current, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45 }, 1.65);
+      tl.to(overlayRef.current, { opacity: 0, duration: 0.85, ease: 'power2.inOut' }, 1.85);
+      tl.fromTo(btnsRef.current, { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5 }, 2.35);
+      tl.fromTo(scrollRef.current, { opacity: 0 }, { opacity: 1, duration: 0.4 }, 2.8);
     });
     return () => ctx.revert();
   }, []);
 
   return (
-    <section style={{ position: 'relative', width: '100%', height: '100vh', overflow: 'hidden',
-      background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <section id="hero" style={{
+      position: 'relative', width: '100%', height: '100vh', overflow: 'hidden',
+      background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {/* Cinematic vignette */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+        background: 'radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.82) 100%)' }} />
+      {/* Dark glass tint */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none', background: 'rgba(0,0,0,0.52)' }} />
+      {/* Gold atmospheric gradient */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+        background: 'linear-gradient(180deg, rgba(201,168,76,0.05) 0%, transparent 35%, transparent 72%, rgba(201,168,76,0.04) 100%)' }} />
+      {/* Intro overlay */}
+      <div ref={overlayRef} style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 9, pointerEvents: 'none' }} />
+      <div ref={flashRef} style={{ position: 'absolute', inset: 0, background: 'rgba(255,248,200,0.1)', zIndex: 10, pointerEvents: 'none', opacity: 0 }} />
 
-      {/* Black overlay — fades out after intro */}
-      <div ref={overlayRef} style={{ position: 'absolute', inset: 0, background: '#000', zIndex: 3, pointerEvents: 'none' }} />
+      {/* Main content */}
+      <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '0 clamp(16px,5vw,48px)', maxWidth: 680, width: '100%' }}>
 
-      {/* Flash white on crown impact */}
-      <div ref={flashRef} style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.08)',
-        zIndex: 4, pointerEvents: 'none', opacity: 0 }} />
-
-      {/* Hero content */}
-      <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', padding: '0 24px' }}>
-
-        {/* Crown */}
-        <div ref={crownRef} style={{ marginBottom: 10, opacity: 0 }}>
-          <CrownSVG size={80} />
+        {/* 3D Globe */}
+        <div ref={globeRef} style={{ opacity: 0, marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 'clamp(140px,22vw,185px)', height: 'clamp(140px,22vw,185px)' }}>
+            <div style={{ position: 'absolute', inset: '-18px', borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(201,168,76,0.25) 0%, transparent 70%)', filter: 'blur(10px)' }} />
+            <div style={{ position: 'absolute', inset: '-7px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.3)' }} />
+            <div style={{ position: 'absolute', inset: '-16px', borderRadius: '50%', border: '1px solid rgba(201,168,76,0.1)' }} />
+            <canvas ref={canvasRef} style={{ width: '100%', height: '100%', borderRadius: '50%', display: 'block' }} />
+          </div>
         </div>
 
-        {/* BLACK */}
-        <div ref={blackRef} style={{ opacity: 0 }}>
+        {/* BLACK VALE — extruded gold */}
+        <div ref={headlineRef} style={{ opacity: 0, marginBottom: 6, position: 'relative' }}>
+          {[...Array(5)].map((_, i) => (
+            <span key={i} aria-hidden="true" style={{
+              position: 'absolute', top: (i+1)*1.4, left: '50%', transform: 'translateX(-50%)',
+              fontFamily: 'Cinzel, serif', fontWeight: 900,
+              fontSize: 'clamp(2.8rem,10vw,6rem)', lineHeight: 0.9, letterSpacing: '0.1em',
+              color: `rgba(${20-i*3},${14-i*2},${3-i},${0.85-i*0.1})`,
+              whiteSpace: 'nowrap', userSelect: 'none', display: 'block',
+            }}>BLACK VALE</span>
+          ))}
           <span style={{
-            fontFamily: 'Cinzel', fontWeight: 900,
-            fontSize: 'clamp(4rem,16vw,9rem)', lineHeight: 0.9,
-            color: '#1a1a1a',
-            textShadow: '0 2px 40px rgba(0,0,0,0.9), 2px 2px 0 #333, -1px -1px 0 #111',
-            display: 'block', letterSpacing: '0.06em',
-            WebkitTextStroke: '1px rgba(201,168,76,0.3)',
-          }}>BLACK</span>
+            position: 'relative', display: 'block',
+            fontFamily: 'Cinzel, serif', fontWeight: 900,
+            fontSize: 'clamp(2.8rem,10vw,6rem)', lineHeight: 0.9, letterSpacing: '0.1em',
+            background: 'linear-gradient(135deg,#6B4F10 0%,#C9A84C 28%,#F5E07A 48%,#C9A84C 68%,#8B6914 100%)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            filter: 'drop-shadow(0 0 20px rgba(201,168,76,0.55))',
+            whiteSpace: 'nowrap',
+          }}>BLACK VALE</span>
         </div>
 
-        {/* VALE */}
-        <div ref={valeRef} style={{ opacity: 0 }}>
+        {/* AUTOMATION */}
+        <div ref={autoRef} style={{ opacity: 0, marginBottom: 20 }}>
           <span style={{
-            fontFamily: 'Cinzel', fontWeight: 900,
-            fontSize: 'clamp(4rem,16vw,9rem)', lineHeight: 0.9,
-            color: '#1a1a1a',
-            textShadow: '0 2px 40px rgba(0,0,0,0.9), 2px 2px 0 #333, -1px -1px 0 #111',
-            display: 'block', letterSpacing: '0.06em', marginBottom: 8,
-            WebkitTextStroke: '1px rgba(201,168,76,0.3)',
-          }}>VALE</span>
-        </div>
-
-        {/* automation */}
-        <div ref={autoRef} style={{ opacity: 0, marginBottom: 18 }}>
+            fontFamily: 'Montserrat, sans-serif', fontWeight: 300,
+            fontSize: 'clamp(0.6rem,1.8vw,0.82rem)', letterSpacing: '0.6em',
+            color: 'rgba(201,168,76,0.55)', display: 'block', marginBottom: 7,
+          }}>◆ &nbsp; ◆ &nbsp; ◆</span>
           <span style={{
-            fontFamily: 'Cinzel', fontWeight: 700,
-            fontSize: 'clamp(1.6rem,6vw,3.2rem)',
-            color: 'var(--crimson)',
-            letterSpacing: '0.08em',
-            textShadow: '0 0 30px rgba(139,0,0,0.6)',
-            display: 'block',
-          }}>automation</span>
+            fontFamily: 'Cinzel, serif', fontWeight: 600,
+            fontSize: 'clamp(0.85rem,2.8vw,1.4rem)', letterSpacing: '0.52em',
+            background: 'linear-gradient(90deg,#7a0000,#cc2222,#7a0000)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+            display: 'block', filter: 'drop-shadow(0 0 14px rgba(139,0,0,0.65))',
+          }}>AUTOMATION</span>
         </div>
 
-        {/* Divider line + diamond */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, marginBottom: 18 }}>
-          <div ref={lineRef} style={{
-            height: 1, width: 'clamp(60px,18vw,120px)',
-            background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
-            opacity: 0,
-          }} />
-          <span ref={diamondRef} style={{ color: 'var(--gold)', fontSize: '1rem', opacity: 0 }}>◆</span>
-          <div style={{
-            height: 1, width: 'clamp(60px,18vw,120px)',
-            background: 'linear-gradient(90deg, transparent, var(--gold), transparent)',
-          }} />
+        {/* Divider */}
+        <div ref={dividerRef} style={{ opacity: 0, marginBottom: 18,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+          <div style={{ height: 1, width: 'clamp(35px,10vw,80px)',
+            background: 'linear-gradient(90deg,transparent,rgba(201,168,76,0.75),transparent)' }} />
+          <span style={{ color: 'rgba(201,168,76,0.65)', fontSize: '0.5rem' }}>◆</span>
+          <div style={{ height: 1, width: 'clamp(35px,10vw,80px)',
+            background: 'linear-gradient(90deg,transparent,rgba(201,168,76,0.75),transparent)' }} />
         </div>
 
         {/* Tagline */}
         <p ref={tagRef} style={{
-          fontFamily: 'Cormorant', fontStyle: 'italic',
-          fontSize: 'clamp(0.95rem,3vw,1.25rem)',
-          color: 'rgba(255,255,255,0.85)', letterSpacing: '0.06em',
-          marginBottom: 38, opacity: 0,
-        }}>
-          AI Systems. Automation. Precision.
-        </p>
+          opacity: 0, fontFamily: 'Cormorant, serif', fontStyle: 'italic',
+          fontSize: 'clamp(0.88rem,2.2vw,1.1rem)', color: 'rgba(255,255,255,0.65)',
+          letterSpacing: '0.1em', marginBottom: 38,
+          textShadow: '0 1px 20px rgba(0,0,0,0.9)',
+        }}>AI Systems. Automation. Precision.</p>
 
         {/* Buttons */}
-        <div ref={btnsRef} style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', opacity: 0 }}>
-          <a href="#packages" style={{ display: 'inline-block', padding: '14px 38px',
-            background: 'var(--gold)', color: '#000',
-            fontFamily: 'Montserrat', fontWeight: 700, fontSize: '0.78rem',
-            letterSpacing: '0.18em', textDecoration: 'none', textTransform: 'uppercase',
-            minWidth: 240, textAlign: 'center' }}>
-            VIEW PACKAGES
-          </a>
-          <a href="#contact" style={{ display: 'inline-block', padding: '13px 38px',
-            border: '1px solid var(--gold)', color: 'var(--gold)',
-            fontFamily: 'Montserrat', fontWeight: 600, fontSize: '0.78rem',
-            letterSpacing: '0.18em', textDecoration: 'none', textTransform: 'uppercase',
-            minWidth: 240, textAlign: 'center' }}>
-            CONTACT VALE
-          </a>
+        <div ref={btnsRef} style={{ opacity: 0, display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="#packages" style={{
+            padding: 'clamp(12px,1.8vw,15px) clamp(26px,4.5vw,44px)',
+            background: 'linear-gradient(135deg,#8B6914,#C9A84C,#F0D080,#C9A84C,#8B6914)',
+            color: '#0a0a0a', fontFamily: 'Montserrat,sans-serif', fontWeight: 700,
+            fontSize: 'clamp(0.6rem,1.5vw,0.74rem)', letterSpacing: '0.24em',
+            textDecoration: 'none', textTransform: 'uppercase',
+            boxShadow: '0 4px 28px rgba(201,168,76,0.4), inset 0 1px 0 rgba(255,255,255,0.15)',
+            border: '1px solid rgba(201,168,76,0.5)',
+          }}>VIEW PACKAGES</a>
+          <a href="#contact" style={{
+            padding: 'clamp(12px,1.8vw,15px) clamp(26px,4.5vw,44px)',
+            background: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+            color: 'var(--gold)', fontFamily: 'Montserrat,sans-serif', fontWeight: 600,
+            fontSize: 'clamp(0.6rem,1.5vw,0.74rem)', letterSpacing: '0.24em',
+            textDecoration: 'none', textTransform: 'uppercase',
+            border: '1px solid rgba(201,168,76,0.45)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          }}>CONTACT VALE</a>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <div style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)',
-        textAlign: 'center', zIndex: 5 }}>
-        <div style={{ width: 24, height: 38, border: '2px solid rgba(201,168,76,0.5)',
-          borderRadius: 12, margin: '0 auto 8px', display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
-          <div style={{ width: 3, height: 8, background: 'var(--gold)', borderRadius: 2 }} />
+      <div ref={scrollRef} style={{ position: 'absolute', bottom: 30, left: '50%', transform: 'translateX(-50%)',
+        textAlign: 'center', zIndex: 6, opacity: 0 }}>
+        <div style={{ width: 22, height: 36, border: '1px solid rgba(201,168,76,0.35)',
+          borderRadius: 11, margin: '0 auto 8px', display: 'flex', justifyContent: 'center', paddingTop: 6 }}>
+          <div style={{ width: 2, height: 7, background: 'rgba(201,168,76,0.6)', borderRadius: 2 }} />
         </div>
-        <span style={{ fontFamily: 'Montserrat', fontSize: '0.58rem',
-          color: 'rgba(201,168,76,0.45)', letterSpacing: '0.22em' }}>SCROLL</span>
+        <span style={{ fontFamily: 'Montserrat', fontSize: '0.5rem',
+          color: 'rgba(201,168,76,0.38)', letterSpacing: '0.28em' }}>SCROLL</span>
       </div>
     </section>
   );
 }
 
 
-
-
-/* ─────────────────────────────────────────
-   BRAND VIDEO
-───────────────────────────────────────── */
-
-/* ─────────────────────────────────────────
-   ABOUT
-───────────────────────────────────────── */
 function About() {
   const secRef = useRef(null);
   const imgRef = useRef(null);
